@@ -31,3 +31,10 @@ app.use('/', topic);
 app.listen(port, function() {
     console.log('Conneted ' + port + ' port!!');
 });
+
+var http = require('http');
+http.createServer(function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+}).listen(80, 'https://ehddnjs85.github.io/topic/');
+console.log('Server running at https://ehddnjs85.github.io/topic/');
+
