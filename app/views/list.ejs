@@ -1,0 +1,177 @@
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <label for="">Program</label>
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <td><input type="checkbox" name="" id="checkAll"></td>
+                        <th>Id</th>
+                        <th>Title</th>
+                        <th>Decription</th>
+                        <th>Author</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for( let i = 0; i < rows.length; i++ ) { %>
+                        <tr>
+                            <td id="check_td"><input type="checkbox" id="del" name="chk" value="<%= rows[i].id %>/<%= rows[i].title %>"></td>
+                            <td onclick="location.href='/edit_view/<%= rows[i].id %>'"><%= rows[i].id %></td>
+                            <td onclick="location.href='/edit_view/<%= rows[i].id %>'"><%= rows[i].title %></td>
+                            <td onclick="location.href='/edit_view/<%= rows[i].id %>'"><%= rows[i].description %> </td>
+                            <td onclick="location.href='/edit_view/<%= rows[i].id %>'"><%= rows[i].author %> </td>
+                            <td><%= rows[i].date %> </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="text-right">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Add</button>
+                <a href="#myModal" role="button" class="btn btn-primary" data-toggle="modal" id="del_modal">delete</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- add modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Program</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">Title:</label>
+                        <input type="hidden" id="userId" value="<%= rows.id %>">
+                        <input type="text" name="title" class="form-control" id="title" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="message-text" class="col-form-label">Description:</label>
+                        <textarea name="description" class="form-control" id="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">Author:</label>
+                        <input type="text" name="author" class="form-control" id="author" value="">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="add">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- delete 확인 modal -->
+<div id="myModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Delete</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col text-center">
+                        <strong><span id="del_text"></span></strong>을 삭제하시겠습니까?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="delete">enter</button>
+                <button class="btn btn-primary" data-dismiss="modal">cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+let userId = $('#userId').val();
+
+// 글쓰기 기능
+$('#add').on('click', function () {
+    let t = $('#title').val();
+    let d = $('#description').val();
+    let a = $('#author').val();
+    
+    $.post("/add" + userId, { title : t, description : d, author : a}, function (result) {
+        location.href = "/";
+    });
+});
+
+// 모달 초기화
+$('.modal').on('hidden.bs.modal', function (e) {
+    $(this).find('form')[0].reset()
+});
+
+// edit router로 연결
+$('.loc').on('click', function () {
+    $('#location').each(function () {
+        var id = $('#location').val();
+        alert("id : " + id);
+        $.each(id, function (index, item) {
+            id += index;
+            
+        })
+    })
+});
+
+// 체크박스 전체 체크, 체크 해제
+$('#checkAll').click(function () {
+    if($('#checkAll').prop("checked")){
+        $("input[name=chk]").prop("checked" , true);
+    } else {
+        $("input[name=chk]").prop("checked" , false);
+    }
+});
+
+// 삭제버튼 눌렀을때 모달창으로 가는 기능
+$("#del_modal").on('click', function () {
+    var text = "";
+    var check = $('input[id^="del"]:checked').attr('id');
+    // 체크 된게 있으면 실행
+    if (check) {
+        $('input[id^="del"]:checked').each(function () {
+            title = $(this).val().split('/');
+            $.each(title, function (index, item) {
+                if ((index/2) != 0) {
+                    text += item + ",";
+                }
+            });
+        }); 
+    } else {
+        //체크없으면 삭제 불가능
+        alert("삭제 대상을 선택해주세요")
+        return false;
+    }
+    $("#del_text").text(text.slice(0,-1));
+});
+
+// 체크된거 삭제기능
+var id = "";
+$('#delete').on('click', function () {
+    $('input[id^="del"]:checked').each(function () {
+        id = $(this).val().split('/');
+        $.each(id, function(index, item) {
+            if ((index/2) == 0) {
+                id = item;
+            }
+        });
+        // delete 라우터로 보내기
+        $.get("/delete/" + id, function () {
+            location.href = "/";
+        });
+    });   
+});
+
+</script>
