@@ -1,0 +1,175 @@
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <label>Data</label>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" name="" id="checkAll"></th>
+                        <th>id</th>
+                        <th>email</th>
+                        <th>name</th>
+                        <th>active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for( let i = 0; i < data.length; i++ ) { %>
+                        <tr>
+                            <td id="check_td"><input type="checkbox" id="del" name="chk" value="<%= data[i].id %>/<%= data[i].email %>"></td>
+                            <td onclick="location.href='/customers/<%= data[i].id %>'"><%= data[i].id %></td>
+                            <td onclick="location.href='/customers/<%= data[i].id %>'"><%= data[i].email %></td>
+                            <td onclick="location.href='/customers/<%= data[i].id %>'"><%= data[i].name %></td>
+                            <td onclick="location.href='/customers/<%= data[i].id %>'"><%= data[i].active %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            <div class="text-right">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Add</button>
+                <a href="#myModal" role="button" class="btn btn-primary" data-toggle="modal" id="del_modal">delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- add modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Program</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">email:</label>
+                        <input type="hidden" id="userId" value="<%= data.id %>">
+                        <input type="email" name="email" class="form-control" id="email" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="message-text" class="col-form-label">name:</label>
+                        <input type="text" name="name" class="form-control" id="name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">active:</label>
+                        <input type="text" name="active" class="form-control" id="active" value="">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="add">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- delete 확인 modal -->
+<div id="myModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Delete</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col text-center">
+                        <strong><span id="del_text"></span></strong>을 삭제하시겠습니까?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="delete">delete</button>
+                <button class="btn btn-primary" data-dismiss="modal">cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+let userId = $('#userId').val();
+
+// 글쓰기 기능
+$('#add').on('click', function () {
+    let email = $('#email').val();
+    let name = $('#name').val();
+    let active = $('#active').val();
+    
+    $.post("/customers", { email, name, active}, function (result) {
+        location.href = "/";
+    });
+});
+
+// 모달 초기화
+const mod = $('.modal').on('hidden.bs.modal', function (e) {
+    $(this).find('form')[0].reset()
+});
+
+// 체크박스 전체 체크, 체크 해제
+$('#checkAll').click(function () {
+    if($('#checkAll').prop("checked")){
+        $("input[name=chk]").prop("checked" , true);
+    } else {
+        $("input[name=chk]").prop("checked" , false);
+    }
+});
+
+// 삭제버튼 눌렀을때 모달창으로 가는 기능
+$("#del_modal").on('click', function () {
+    var text = "";
+    var check = $('input[id^="del"]:checked').attr('id');
+    // 체크 된게 있으면 실행
+    if (check) {
+        $('input[id^="del"]:checked').each(function () {
+            title = $(this).val().split('/');
+            $.each(title, function (index, item) {
+                if ((index/2) != 0) {
+                    text += item + ",";
+                }
+            });
+        }); 
+    } else {
+        //체크없으면 삭제 불가능
+        alert("삭제 대상을 선택해주세요")
+        return false;
+    }
+    $("#del_text").text(text.slice(0,-1));
+});
+
+// 체크된거 삭제기능
+var id = "";
+$('#delete').on('click', function () {
+    $('input[id^="del"]:checked').each(function () {
+        id = $(this).val().split('/');
+        $.each(id, function(index, item) {
+            if ((index/2) == 0) {
+                id = item;
+            }
+        });
+        // delete 라우터로 보내기
+        if($("input[name=chk]").prop("checked")){
+            $.ajax({
+                url : "/customers",
+                type : "delete"
+            }).done(function (response) {
+                location.href = "/";
+            });
+        } else {
+            $.ajax({
+                url : "/customers/" + id,
+                type : "delete",
+                data : id
+            }).done(function (response) {
+                location.href = "/";
+            });
+        }
+    });
+});
+
+</script>
